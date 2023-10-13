@@ -129,7 +129,6 @@ namespace PixelWizardFX2023 {
             this->selectFilter->Items->Add("Escala de Cinza");
             this->selectFilter->Items->Add("Escuridão Simples");
             this->selectFilter->Items->Add("Sal e Pimenta");
-            this->selectFilter->Items->Add("Sobel");
             this->selectFilter->SelectedIndexChanged += gcnew System::EventHandler(this, &MainForm::comboBox1_SelectedIndexChanged);
             // 
             // radioButtonCpu
