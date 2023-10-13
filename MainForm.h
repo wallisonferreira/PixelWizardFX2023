@@ -64,6 +64,7 @@ namespace PixelWizardFX2023 {
 
 
 
+
     private: System::ComponentModel::IContainer^ components;
     protected:
 
@@ -195,6 +196,7 @@ namespace PixelWizardFX2023 {
             this->pictureBoxInput->Location = System::Drawing::Point(12, 163);
             this->pictureBoxInput->Name = L"pictureBoxInput";
             this->pictureBoxInput->Size = System::Drawing::Size(444, 386);
+            this->pictureBoxInput->SizeMode = System::Windows::Forms::PictureBoxSizeMode::StretchImage;
             this->pictureBoxInput->TabIndex = 5;
             this->pictureBoxInput->TabStop = false;
             this->pictureBoxInput->Click += gcnew System::EventHandler(this, &MainForm::pictureBoxInput_Click);
@@ -208,6 +210,7 @@ namespace PixelWizardFX2023 {
             this->pictureBoxResult->Location = System::Drawing::Point(586, 163);
             this->pictureBoxResult->Name = L"pictureBoxResult";
             this->pictureBoxResult->Size = System::Drawing::Size(444, 386);
+            this->pictureBoxResult->SizeMode = System::Windows::Forms::PictureBoxSizeMode::StretchImage;
             this->pictureBoxResult->TabIndex = 6;
             this->pictureBoxResult->TabStop = false;
             // 
@@ -267,8 +270,9 @@ namespace PixelWizardFX2023 {
         OpenFileDialog^ ofd = gcnew OpenFileDialog();
 
         if (ofd->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
-            pictureBoxInput->ImageLocation = ofd->FileName;
+            pictureBoxInput->Image = System::Drawing::Image::FromFile(ofd->FileName);
         }
+       
     }
     private: System::Void button2_Click(System::Object^ sender, System::EventArgs^ e) {
     }
@@ -286,9 +290,9 @@ namespace PixelWizardFX2023 {
     }
     private: System::Void groupBox3_Enter(System::Object^ sender, System::EventArgs^ e) {
     }
-private: System::Void pictureBoxInput_Click(System::Object^ sender, System::EventArgs^ e) {
-}
-private: System::Void MainForm_Load(System::Object^ sender, System::EventArgs^ e) {
-}
+    private: System::Void pictureBoxInput_Click(System::Object^ sender, System::EventArgs^ e) {
+    }
+    private: System::Void MainForm_Load(System::Object^ sender, System::EventArgs^ e) {
+    }
 };
 }
