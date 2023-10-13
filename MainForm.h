@@ -1,7 +1,5 @@
 #pragma once
 #include <string>
-#include "include/stb_image.h"
-#include "include/stb_image_write.h"
 
 namespace PixelWizardFX2023 {
     extern "C" {
@@ -54,18 +52,9 @@ namespace PixelWizardFX2023 {
     private: System::Windows::Forms::PictureBox^ pictureBoxInput;
     private: System::Windows::Forms::PictureBox^ pictureBoxResult;
     private: System::Windows::Forms::Button^ buttonApply;
-
-
-
-
     private: System::Windows::Forms::GroupBox^ groupBox3;
-
-
-
-
-
-
     private: System::ComponentModel::IContainer^ components;
+
     protected:
 
     private:
@@ -135,6 +124,12 @@ namespace PixelWizardFX2023 {
             this->selectFilter->Name = L"selectFilter";
             this->selectFilter->Size = System::Drawing::Size(365, 28);
             this->selectFilter->TabIndex = 2;
+            this->selectFilter->Text = "Selecione um filtro...";
+            this->selectFilter->Items->Add("Filtro de Azul");
+            this->selectFilter->Items->Add("Escala de Cinza");
+            this->selectFilter->Items->Add("Escuridão Simples");
+            this->selectFilter->Items->Add("Sal e Pimenta");
+            this->selectFilter->Items->Add("Sobel");
             this->selectFilter->SelectedIndexChanged += gcnew System::EventHandler(this, &MainForm::comboBox1_SelectedIndexChanged);
             // 
             // radioButtonCpu
@@ -266,13 +261,13 @@ namespace PixelWizardFX2023 {
         }
     
 #pragma endregion
+    // carrega a imagem no PictureBox 
     private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
         OpenFileDialog^ ofd = gcnew OpenFileDialog();
 
         if (ofd->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
             pictureBoxInput->Image = System::Drawing::Image::FromFile(ofd->FileName);
         }
-       
     }
     private: System::Void button2_Click(System::Object^ sender, System::EventArgs^ e) {
     }
@@ -284,7 +279,29 @@ namespace PixelWizardFX2023 {
     }
     private: System::Void groupBox2_Enter(System::Object^ sender, System::EventArgs^ e) {
     }
+
+    // realiza operação de filtro
     private: System::Void button3_Click(System::Object^ sender, System::EventArgs^ e) {
+        if (pictureBoxInput->Image != nullptr) {
+            if (selectFilter->SelectedIndex == 0) {
+                filterBlue();
+            }
+
+            if (selectFilter->SelectedIndex == 1) {
+                filterGrayScale();
+            }
+
+            if (selectFilter->SelectedIndex == 2) {
+                filterSimpleDarkness();
+            }
+
+            if (selectFilter->SelectedIndex == 3) {
+                filterSaltAndPepper();
+            }
+        }
+        else {
+            MessageBox::Show("No image loaded in the input image box", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+        }
     }
     private: System::Void splitContainer1_Panel1_Paint(System::Object^ sender, System::Windows::Forms::PaintEventArgs^ e) {
     }
@@ -293,6 +310,169 @@ namespace PixelWizardFX2023 {
     private: System::Void pictureBoxInput_Click(System::Object^ sender, System::EventArgs^ e) {
     }
     private: System::Void MainForm_Load(System::Object^ sender, System::EventArgs^ e) {
+    }
+
+    /* Filters */
+    private: System::Void filterBlue() {
+        // Salve a imagem carregada em um arquivo temporário
+        String^ tempFilePath = "temp_image.jpg";
+        pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
+
+        // Carregue a imagem com stbi
+        int width, height, channels;
+        unsigned char* img = stbi_load("temp_image.jpg", &width, &height, &channels, 0);
+
+        if (img != nullptr) {
+            // Altere os canais vermelho e verde para zero
+            for (int i = 0; i < width * height * channels; i += channels) {
+                img[i] = 0;     // Canal vermelho
+                img[i + 1] = 0;   // Canal verde
+            }
+
+            // Salve a imagem modificada
+            stbi_write_jpg("blue_image.jpg", width, height, channels, img, 100);
+
+            // Libere a memória da imagem original
+            stbi_image_free(img);
+
+            // Carregue a imagem modificada na Output_Image_Box
+            pictureBoxResult->Image = Image::FromFile("blue_image.jpg");
+
+            // Delete the temporary file
+            System::IO::File::Delete(tempFilePath);
+        }
+        else {
+            MessageBox::Show("Failed to load image with stbi", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+        }
+    }
+
+    private: System::Void filterGrayScale() {
+        // Salve a imagem carregada em um arquivo temporário
+        String^ tempFilePath = "temp_image.jpg";
+        pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
+
+        // Carregue a imagem com stbi
+        int width, height, channels;
+        unsigned char* img = stbi_load("temp_image.jpg", &width, &height, &channels, 0);
+
+        if (img != nullptr) {
+            // grayscale
+            for (int i = 0; i < width * height * channels; i += channels) {
+                int gray = (img[i] + img[i + 1] + img[i + 2]) / 3;
+                img[i] = gray;     // Canal vermelho
+                img[i + 1] = gray;   // Canal verde
+                img[i + 2] = gray;
+            }
+
+            // Salve a imagem modificada
+            stbi_write_jpg("gray_scale_image.jpg", width, height, channels, img, 100);
+
+            // Libere a memória da imagem original
+            stbi_image_free(img);
+
+            // Carregue a imagem modificada na Output_Image_Box
+            pictureBoxResult->Image = Image::FromFile("gray_scale_image.jpg");
+
+            // Delete the temporary file
+            System::IO::File::Delete(tempFilePath);
+        }
+        else {
+            MessageBox::Show("Failed to load image with stbi", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+        }
+    }
+
+    private: System::Void filterSimpleDarkness() {
+        // Salve a imagem carregada em um arquivo temporário
+        String^ tempFilePath = "temp_image.jpg";
+        pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
+
+        // Carregue a imagem com stbi
+        int width, height, channels;
+        unsigned char* img = stbi_load("temp_image.jpg", &width, &height, &channels, 0);
+
+        if (img != nullptr) {
+            // simple darkness
+            for (int i = 0; i < width; i++) {
+                for (int y = 0; y < height; y++) {
+                    for (int c = 0; c < 3; c++) {
+                        if (img[(y * width + i) * 3 + c] >= 50) {
+                            img[(y * width + i) * 3 + c] -= 50;
+                        }
+                        else if (img[(y * width + i) * 3 + c] <= 50) {
+                            img[(y * width + i) * 3 + c] = 0;
+                        }
+                    }
+                
+                }
+            }
+
+            // Salve a imagem modificada
+            stbi_write_jpg("gray_scale_image.jpg", width, height, channels, img, 100);
+
+            // Libere a memória da imagem original
+            stbi_image_free(img);
+
+            // Carregue a imagem modificada na Output_Image_Box
+            pictureBoxResult->Image = Image::FromFile("gray_scale_image.jpg");
+
+            // Delete the temporary file
+            System::IO::File::Delete(tempFilePath);
+        }
+        else {
+            MessageBox::Show("Failed to load image with stbi", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+        }
+    }
+
+    private: System::Void filterSaltAndPepper() {
+        // Salve a imagem carregada em um arquivo temporário
+        String^ tempFilePath = "temp_image.jpg";
+        pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
+
+        // Carregue a imagem com stbi
+        int width, height, channels;
+        unsigned char* img = stbi_load("temp_image.jpg", &width, &height, &channels, 0);
+
+        if (img != nullptr) {
+            // salt and pepper noise
+            for (int i = 0; i < width; i++) {
+                for (int y = 0; y < height; y++) {
+                    for (int c = 0; c < 3; c++) {
+                        int num = rand() % 100;
+                        if (num < 4) {
+                            if (num % 2 == 0) {
+                                img[(y * width + i) * 3 + c] = 255;
+                            }
+                            else {
+                                img[(y * width + i) * 3 + c] = 0;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Salve a imagem modificada
+            stbi_write_jpg("gray_scale_image.jpg", width, height, channels, img, 100);
+
+            // Libere a memória da imagem original
+            stbi_image_free(img);
+
+            // Carregue a imagem modificada na Output_Image_Box
+            pictureBoxResult->Image = Image::FromFile("gray_scale_image.jpg");
+
+            // Delete the temporary file
+            System::IO::File::Delete(tempFilePath);
+        }
+        else {
+            MessageBox::Show("Failed to load image with stbi", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+        }
+    }
+
+    /* Utils */
+
+    // Salva a imagem como arquivo temporário
+    private: System::Void saveImageAsTemporary() {
+        String^ tempFilePath = "temp_image.jpg";
+        pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
     }
 };
 }
