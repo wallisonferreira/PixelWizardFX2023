@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <iostream>
+#include <chrono>
 
 namespace PixelWizardFX2023 {
     extern "C" {
@@ -16,6 +18,7 @@ namespace PixelWizardFX2023 {
     using namespace System::Windows::Forms;
     using namespace System::Data;
     using namespace System::Drawing;
+    using namespace std;
 
     /// <summary>
     /// Sumário para MainForm
@@ -53,6 +56,11 @@ namespace PixelWizardFX2023 {
     private: System::Windows::Forms::PictureBox^ pictureBoxResult;
     private: System::Windows::Forms::Button^ buttonApply;
     private: System::Windows::Forms::GroupBox^ groupBox3;
+    private: System::Windows::Forms::RadioButton^ radioButtonCpuParallel;
+    private: System::Windows::Forms::Label^ label1;
+    private: System::Windows::Forms::Label^ label2;
+    private: System::Windows::Forms::Label^ statusLabel;
+
     private: System::ComponentModel::IContainer^ components;
 
     protected:
@@ -77,11 +85,15 @@ namespace PixelWizardFX2023 {
             this->radioButtonCpu = (gcnew System::Windows::Forms::RadioButton());
             this->radioButtonGpu = (gcnew System::Windows::Forms::RadioButton());
             this->groupBox1 = (gcnew System::Windows::Forms::GroupBox());
+            this->radioButtonCpuParallel = (gcnew System::Windows::Forms::RadioButton());
             this->groupBox2 = (gcnew System::Windows::Forms::GroupBox());
             this->pictureBoxInput = (gcnew System::Windows::Forms::PictureBox());
             this->pictureBoxResult = (gcnew System::Windows::Forms::PictureBox());
             this->buttonApply = (gcnew System::Windows::Forms::Button());
             this->groupBox3 = (gcnew System::Windows::Forms::GroupBox());
+            this->label1 = (gcnew System::Windows::Forms::Label());
+            this->label2 = (gcnew System::Windows::Forms::Label());
+            this->statusLabel = (gcnew System::Windows::Forms::Label());
             this->groupBox1->SuspendLayout();
             this->groupBox2->SuspendLayout();
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBoxInput))->BeginInit();
@@ -120,15 +132,15 @@ namespace PixelWizardFX2023 {
             this->selectFilter->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
                 static_cast<System::Byte>(0)));
             this->selectFilter->FormattingEnabled = true;
+            this->selectFilter->Items->AddRange(gcnew cli::array< System::Object^  >(4) {
+                L"Filtro de Azul", L"Escala de Cinza", L"Escuridão Simples",
+                    L"Sal e Pimenta"
+            });
             this->selectFilter->Location = System::Drawing::Point(6, 30);
             this->selectFilter->Name = L"selectFilter";
             this->selectFilter->Size = System::Drawing::Size(365, 28);
             this->selectFilter->TabIndex = 2;
-            this->selectFilter->Text = "Selecione um filtro...";
-            this->selectFilter->Items->Add("Filtro de Azul");
-            this->selectFilter->Items->Add("Escala de Cinza");
-            this->selectFilter->Items->Add("Escuridão Simples");
-            this->selectFilter->Items->Add("Sal e Pimenta");
+            this->selectFilter->Text = L"Selecione um filtro...";
             this->selectFilter->SelectedIndexChanged += gcnew System::EventHandler(this, &MainForm::comboBox1_SelectedIndexChanged);
             // 
             // radioButtonCpu
@@ -147,7 +159,7 @@ namespace PixelWizardFX2023 {
             // radioButtonGpu
             // 
             this->radioButtonGpu->AutoSize = true;
-            this->radioButtonGpu->Location = System::Drawing::Point(70, 32);
+            this->radioButtonGpu->Location = System::Drawing::Point(235, 32);
             this->radioButtonGpu->Name = L"radioButtonGpu";
             this->radioButtonGpu->Size = System::Drawing::Size(59, 22);
             this->radioButtonGpu->TabIndex = 2;
@@ -157,16 +169,29 @@ namespace PixelWizardFX2023 {
             // 
             // groupBox1
             // 
+            this->groupBox1->Controls->Add(this->radioButtonCpuParallel);
             this->groupBox1->Controls->Add(this->radioButtonGpu);
             this->groupBox1->Controls->Add(this->radioButtonCpu);
             this->groupBox1->Font = (gcnew System::Drawing::Font(L"Microsoft Sans Serif", 11.25F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
                 static_cast<System::Byte>(0)));
             this->groupBox1->Location = System::Drawing::Point(527, 12);
             this->groupBox1->Name = L"groupBox1";
-            this->groupBox1->Size = System::Drawing::Size(135, 69);
+            this->groupBox1->Size = System::Drawing::Size(300, 69);
             this->groupBox1->TabIndex = 3;
             this->groupBox1->TabStop = false;
             this->groupBox1->Text = L"Execução em";
+            // 
+            // radioButtonCpuParallel
+            // 
+            this->radioButtonCpuParallel->AutoSize = true;
+            this->radioButtonCpuParallel->Location = System::Drawing::Point(81, 32);
+            this->radioButtonCpuParallel->Name = L"radioButtonCpuParallel";
+            this->radioButtonCpuParallel->Size = System::Drawing::Size(134, 22);
+            this->radioButtonCpuParallel->TabIndex = 9;
+            this->radioButtonCpuParallel->TabStop = true;
+            this->radioButtonCpuParallel->Text = L"CPU Multithread";
+            this->radioButtonCpuParallel->UseVisualStyleBackColor = true;
+            this->radioButtonCpuParallel->CheckedChanged += gcnew System::EventHandler(this, &MainForm::radioButton1_CheckedChanged_1);
             // 
             // groupBox2
             // 
@@ -219,7 +244,7 @@ namespace PixelWizardFX2023 {
             this->buttonApply->Size = System::Drawing::Size(95, 46);
             this->buttonApply->TabIndex = 7;
             this->buttonApply->UseVisualStyleBackColor = true;
-            this->buttonApply->Click += gcnew System::EventHandler(this, &MainForm::button3_Click);
+            this->buttonApply->Click += gcnew System::EventHandler(this, &MainForm::buttonApplyFilter);
             // 
             // groupBox3
             // 
@@ -235,11 +260,47 @@ namespace PixelWizardFX2023 {
             this->groupBox3->Text = L"Ações";
             this->groupBox3->Enter += gcnew System::EventHandler(this, &MainForm::groupBox3_Enter);
             // 
+            // label1
+            // 
+            this->label1->AutoSize = true;
+            this->label1->Font = (gcnew System::Drawing::Font(L"Verdana", 9.75F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+                static_cast<System::Byte>(0)));
+            this->label1->Location = System::Drawing::Point(729, 144);
+            this->label1->Name = L"label1";
+            this->label1->Size = System::Drawing::Size(156, 16);
+            this->label1->TabIndex = 9;
+            this->label1->Text = L"Imagem Processada";
+            this->label1->Click += gcnew System::EventHandler(this, &MainForm::label1_Click);
+            // 
+            // label2
+            // 
+            this->label2->AutoSize = true;
+            this->label2->Font = (gcnew System::Drawing::Font(L"Verdana", 9.75F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
+                static_cast<System::Byte>(0)));
+            this->label2->Location = System::Drawing::Point(161, 144);
+            this->label2->Name = L"label2";
+            this->label2->Size = System::Drawing::Size(151, 16);
+            this->label2->TabIndex = 10;
+            this->label2->Text = L"Imagem de Entrada";
+            // 
+            // statusLabel
+            // 
+            this->statusLabel->AutoSize = true;
+            this->statusLabel->Font = (gcnew System::Drawing::Font(L"Verdana", 9.75F, static_cast<System::Drawing::FontStyle>((System::Drawing::FontStyle::Bold | System::Drawing::FontStyle::Italic)),
+                System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+            this->statusLabel->Location = System::Drawing::Point(652, 84);
+            this->statusLabel->Name = L"statusLabel";
+            this->statusLabel->Size = System::Drawing::Size(0, 16);
+            this->statusLabel->TabIndex = 11;
+            // 
             // MainForm
             // 
             this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
             this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
             this->ClientSize = System::Drawing::Size(1044, 561);
+            this->Controls->Add(this->statusLabel);
+            this->Controls->Add(this->label2);
+            this->Controls->Add(this->label1);
             this->Controls->Add(this->groupBox3);
             this->Controls->Add(this->buttonApply);
             this->Controls->Add(this->pictureBoxResult);
@@ -256,6 +317,7 @@ namespace PixelWizardFX2023 {
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBoxResult))->EndInit();
             this->groupBox3->ResumeLayout(false);
             this->ResumeLayout(false);
+            this->PerformLayout();
 
         }
     
@@ -274,16 +336,24 @@ namespace PixelWizardFX2023 {
     }
     private: System::Void radioButton2_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
     }
+    private: System::Void radioButton1_CheckedChanged_1(System::Object^ sender, System::EventArgs^ e) {
+    }
     private: System::Void comboBox1_SelectedIndexChanged(System::Object^ sender, System::EventArgs^ e) {
     }
     private: System::Void groupBox2_Enter(System::Object^ sender, System::EventArgs^ e) {
     }
 
-    // realiza operação de filtro
-    private: System::Void button3_Click(System::Object^ sender, System::EventArgs^ e) {
+    // Aplica o filtro na imagem do picture box
+    private: System::Void buttonApplyFilter(System::Object^ sender, System::EventArgs^ e) {
         if (pictureBoxInput->Image != nullptr) {
+
+            statusLabel->Text = getOptionName(checkWhichExecutionModeWasSelected());
+
             if (selectFilter->SelectedIndex == 0) {
-                filterBlue();
+                int mode = checkWhichExecutionModeWasSelected();
+                if (mode == 1) {
+                    filterBlue();
+                }
             }
 
             if (selectFilter->SelectedIndex == 1) {
@@ -329,13 +399,13 @@ namespace PixelWizardFX2023 {
             }
 
             // Salve a imagem modificada
-            stbi_write_jpg("blue_image.jpg", width, height, channels, img, 100);
+            stbi_write_jpg("output_filter_blue.jpg", width, height, channels, img, 100);
 
             // Libere a memória da imagem original
             stbi_image_free(img);
 
             // Carregue a imagem modificada na Output_Image_Box
-            pictureBoxResult->Image = Image::FromFile("blue_image.jpg");
+            pictureBoxResult->Image = Image::FromFile("output_filter_blue.jpg");
 
             // Delete the temporary file
             System::IO::File::Delete(tempFilePath);
@@ -364,13 +434,13 @@ namespace PixelWizardFX2023 {
             }
 
             // Salve a imagem modificada
-            stbi_write_jpg("gray_scale_image.jpg", width, height, channels, img, 100);
+            stbi_write_jpg("output_gray_scale.jpg", width, height, channels, img, 100);
 
             // Libere a memória da imagem original
             stbi_image_free(img);
 
             // Carregue a imagem modificada na Output_Image_Box
-            pictureBoxResult->Image = Image::FromFile("gray_scale_image.jpg");
+            pictureBoxResult->Image = Image::FromFile("output_gray_scale.jpg");
 
             // Delete the temporary file
             System::IO::File::Delete(tempFilePath);
@@ -406,13 +476,13 @@ namespace PixelWizardFX2023 {
             }
 
             // Salve a imagem modificada
-            stbi_write_jpg("gray_scale_image.jpg", width, height, channels, img, 100);
+            stbi_write_jpg("simple_darkness.jpg", width, height, channels, img, 100);
 
             // Libere a memória da imagem original
             stbi_image_free(img);
 
             // Carregue a imagem modificada na Output_Image_Box
-            pictureBoxResult->Image = Image::FromFile("gray_scale_image.jpg");
+            pictureBoxResult->Image = Image::FromFile("simple_darkness.jpg");
 
             // Delete the temporary file
             System::IO::File::Delete(tempFilePath);
@@ -450,13 +520,13 @@ namespace PixelWizardFX2023 {
             }
 
             // Salve a imagem modificada
-            stbi_write_jpg("gray_scale_image.jpg", width, height, channels, img, 100);
+            stbi_write_jpg("salt_and_pepper.jpg", width, height, channels, img, 100);
 
             // Libere a memória da imagem original
             stbi_image_free(img);
 
             // Carregue a imagem modificada na Output_Image_Box
-            pictureBoxResult->Image = Image::FromFile("gray_scale_image.jpg");
+            pictureBoxResult->Image = Image::FromFile("salt_and_pepper.jpg");
 
             // Delete the temporary file
             System::IO::File::Delete(tempFilePath);
@@ -467,11 +537,34 @@ namespace PixelWizardFX2023 {
     }
 
     /* Utils */
-
-    // Salva a imagem como arquivo temporário
-    private: System::Void saveImageAsTemporary() {
-        String^ tempFilePath = "temp_image.jpg";
-        pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
+    private: int checkWhichExecutionModeWasSelected() {
+        if (radioButtonCpu->Checked) {
+            return 1; // CPU
+        }
+        else if (radioButtonCpuParallel->Checked) {
+            return 2; // CPU Parallel
+        }
+        else {
+            return 3; // GPU
+        }
     }
+
+    private: String^ getOptionName(int optionIndex) {
+        switch (optionIndex) {
+            case 1:
+                return "CPU";
+                break;
+            case 2:
+                return "CPU Multithread";
+                break;
+            case 3:
+                return "GPU";
+            default:
+                return "";
+        }
+    }
+
+private: System::Void label1_Click(System::Object^ sender, System::EventArgs^ e) {
+}
 };
 }
