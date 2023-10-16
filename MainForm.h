@@ -443,6 +443,11 @@ namespace PixelWizardFX2023 {
         String^ tempFilePath = "temp_image.jpg";
         pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
 
+        // Verifica se existe alguma imagem no quadro de saída e deleta
+        if (pictureBoxResult->Image != nullptr) {
+            delete pictureBoxResult->Image;
+        }
+
         // Carregue a imagem com stbi
         int width, height, channels;
         unsigned char* img = stbi_load("temp_image.jpg", &width, &height, &channels, 0);
@@ -465,7 +470,7 @@ namespace PixelWizardFX2023 {
             // Libere a memória da imagem original
             stbi_image_free(img);
 
-            // Carregue a imagem modificada na Output_Image_Box
+            // Carregue a imagem modificada na quadro de saída
             pictureBoxResult->Image = Image::FromFile("output_filter_blue.jpg");
 
             // Delete the temporary file
@@ -480,6 +485,11 @@ namespace PixelWizardFX2023 {
         // Salve a imagem carregada em um arquivo temporário
         String^ tempFilePath = "temp_image.jpg";
         pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
+
+        // Verifica se existe alguma imagem no quadro de saída e deleta
+        if (pictureBoxResult->Image != nullptr) {
+            delete pictureBoxResult->Image;
+        }
 
         // Carregue a imagem com stbi
         int width, height, channels;
@@ -511,6 +521,11 @@ namespace PixelWizardFX2023 {
         String^ tempFilePath = "temp_image.jpg";
         pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
 
+        // Verifica se existe alguma imagem no quadro de saída e deleta
+        if (pictureBoxResult->Image != nullptr) {
+            delete pictureBoxResult->Image;
+        }
+
         // Carregue a imagem com stbi
         int width, height, channels;
         unsigned char* img = stbi_load("temp_image.jpg", &width, &height, &channels, 0);
@@ -540,6 +555,11 @@ namespace PixelWizardFX2023 {
         // Salve a imagem carregada em um arquivo temporário
         String^ tempFilePath = "temp_image.jpg";
         pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
+
+        // Verifica se existe alguma imagem no quadro de saída e deleta
+        if (pictureBoxResult->Image != nullptr) {
+            delete pictureBoxResult->Image;
+        }
 
         // Carregue a imagem com stbi
         int width, height, channels;
