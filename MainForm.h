@@ -5,6 +5,7 @@
 #include <vector>
 #include <chrono>
 #include "filtersCpu.cpp"
+#include "filtersCpuMultithread.cpp"
 
 using namespace std::chrono;
 
@@ -391,6 +392,11 @@ namespace PixelWizardFX2023 {
                 if (mode == 2) {
                     unsigned int n = std::thread::hardware_concurrency();
                     statusLabel->Text = getOptionName(mode) + ": " + n + "Threads concorrentes são suportadas.";
+                    auto start = high_resolution_clock::now();
+                    filterBlueParallel();
+                    auto end = high_resolution_clock::now();
+                    auto duration = duration_cast<microseconds>(end - start);
+                    time = duration.count();
                 }
             }
 
@@ -437,6 +443,44 @@ namespace PixelWizardFX2023 {
     }
 
     /******************************************** Filters *******************************************/
+
+    private: System::Void filterBlueParallel() {
+        // Salve a imagem carregada em um arquivo temporário
+        String^ tempFilePath = "temp_image.jpg";
+        pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
+
+        // Verifica se existe alguma imagem no quadro de saída e deleta
+        if (pictureBoxResult->Image != nullptr) {
+            delete pictureBoxResult->Image;
+        }
+
+        // Carregue a imagem com stbi
+        int width, height, channels;
+        unsigned char* img = stbi_load("temp_image.jpg", &width, &height, &channels, 0);
+
+        if (img != nullptr) {
+
+            unsigned int numberOfElements = width * height * channels;
+
+            // filter blue multithread
+            parallel(numberOfElements, width, height, channels, img);
+
+            // Salve a imagem modificada
+            stbi_write_jpg("output_filter_blue_multithread.jpg", width, height, channels, img, 100);
+
+            // Libere a memória da imagem original
+            stbi_image_free(img);
+
+            // Carregue a imagem modificada na quadro de saída
+            pictureBoxResult->Image = Image::FromFile("output_filter_blue_multithread.jpg");
+
+            // Delete the temporary file
+            System::IO::File::Delete(tempFilePath);
+        }
+        else {
+            MessageBox::Show("Failed to load image with stbi", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
+        }
+    }
 
     private: System::Void filterBlue() {
         // Salve a imagem carregada em um arquivo temporário
