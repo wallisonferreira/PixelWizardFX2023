@@ -1,7 +1,12 @@
 #pragma once
 #include <string>
 #include <iostream>
+#include <thread>
+#include <vector>
 #include <chrono>
+#include "filtersCpu.cpp"
+
+using namespace std::chrono;
 
 namespace PixelWizardFX2023 {
     extern "C" {
@@ -60,6 +65,10 @@ namespace PixelWizardFX2023 {
     private: System::Windows::Forms::Label^ label1;
     private: System::Windows::Forms::Label^ label2;
     private: System::Windows::Forms::Label^ statusLabel;
+    private: System::Windows::Forms::ContextMenuStrip^ contextMenuStrip1;
+    private: System::Windows::Forms::Label^ labelExecutionTime;
+
+
 
     private: System::ComponentModel::IContainer^ components;
 
@@ -78,6 +87,7 @@ namespace PixelWizardFX2023 {
         /// </summary>
         void InitializeComponent(void)
         {
+            this->components = (gcnew System::ComponentModel::Container());
             System::ComponentModel::ComponentResourceManager^ resources = (gcnew System::ComponentModel::ComponentResourceManager(MainForm::typeid));
             this->buttonOpen = (gcnew System::Windows::Forms::Button());
             this->buttonClean = (gcnew System::Windows::Forms::Button());
@@ -94,6 +104,8 @@ namespace PixelWizardFX2023 {
             this->label1 = (gcnew System::Windows::Forms::Label());
             this->label2 = (gcnew System::Windows::Forms::Label());
             this->statusLabel = (gcnew System::Windows::Forms::Label());
+            this->contextMenuStrip1 = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
+            this->labelExecutionTime = (gcnew System::Windows::Forms::Label());
             this->groupBox1->SuspendLayout();
             this->groupBox2->SuspendLayout();
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBoxInput))->BeginInit();
@@ -265,7 +277,7 @@ namespace PixelWizardFX2023 {
             this->label1->AutoSize = true;
             this->label1->Font = (gcnew System::Drawing::Font(L"Verdana", 9.75F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
                 static_cast<System::Byte>(0)));
-            this->label1->Location = System::Drawing::Point(729, 144);
+            this->label1->Location = System::Drawing::Point(729, 140);
             this->label1->Name = L"label1";
             this->label1->Size = System::Drawing::Size(156, 16);
             this->label1->TabIndex = 9;
@@ -277,7 +289,7 @@ namespace PixelWizardFX2023 {
             this->label2->AutoSize = true;
             this->label2->Font = (gcnew System::Drawing::Font(L"Verdana", 9.75F, System::Drawing::FontStyle::Bold, System::Drawing::GraphicsUnit::Point,
                 static_cast<System::Byte>(0)));
-            this->label2->Location = System::Drawing::Point(161, 144);
+            this->label2->Location = System::Drawing::Point(161, 140);
             this->label2->Name = L"label2";
             this->label2->Size = System::Drawing::Size(151, 16);
             this->label2->TabIndex = 10;
@@ -288,16 +300,33 @@ namespace PixelWizardFX2023 {
             this->statusLabel->AutoSize = true;
             this->statusLabel->Font = (gcnew System::Drawing::Font(L"Verdana", 9.75F, static_cast<System::Drawing::FontStyle>((System::Drawing::FontStyle::Bold | System::Drawing::FontStyle::Italic)),
                 System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-            this->statusLabel->Location = System::Drawing::Point(652, 84);
+            this->statusLabel->Location = System::Drawing::Point(456, 96);
             this->statusLabel->Name = L"statusLabel";
             this->statusLabel->Size = System::Drawing::Size(0, 16);
             this->statusLabel->TabIndex = 11;
+            // 
+            // contextMenuStrip1
+            // 
+            this->contextMenuStrip1->Name = L"contextMenuStrip1";
+            this->contextMenuStrip1->Size = System::Drawing::Size(61, 4);
+            // 
+            // labelExecutionTime
+            // 
+            this->labelExecutionTime->AutoSize = true;
+            this->labelExecutionTime->Font = (gcnew System::Drawing::Font(L"Verdana", 9.75F, static_cast<System::Drawing::FontStyle>((System::Drawing::FontStyle::Bold | System::Drawing::FontStyle::Italic)),
+                System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
+            this->labelExecutionTime->Location = System::Drawing::Point(456, 125);
+            this->labelExecutionTime->Name = L"labelExecutionTime";
+            this->labelExecutionTime->Size = System::Drawing::Size(0, 16);
+            this->labelExecutionTime->TabIndex = 14;
+            this->labelExecutionTime->Click += gcnew System::EventHandler(this, &MainForm::label3_Click);
             // 
             // MainForm
             // 
             this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
             this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
             this->ClientSize = System::Drawing::Size(1044, 561);
+            this->Controls->Add(this->labelExecutionTime);
             this->Controls->Add(this->statusLabel);
             this->Controls->Add(this->label2);
             this->Controls->Add(this->label1);
@@ -347,26 +376,52 @@ namespace PixelWizardFX2023 {
     private: System::Void buttonApplyFilter(System::Object^ sender, System::EventArgs^ e) {
         if (pictureBoxInput->Image != nullptr) {
 
-            statusLabel->Text = getOptionName(checkWhichExecutionModeWasSelected());
+            int mode = checkWhichExecutionModeWasSelected();
+            int time = 0;
 
             if (selectFilter->SelectedIndex == 0) {
-                int mode = checkWhichExecutionModeWasSelected();
                 if (mode == 1) {
+                    statusLabel->Text = getOptionName(mode);
+                    auto start = high_resolution_clock::now();
                     filterBlue();
+                    auto end = high_resolution_clock::now();
+                    auto duration = duration_cast<microseconds>(end - start);
+                    time = duration.count();
+                }
+                if (mode == 2) {
+                    unsigned int n = std::thread::hardware_concurrency();
+                    statusLabel->Text = getOptionName(mode) + ": " + n + "Threads concorrentes são suportadas.";
                 }
             }
 
             if (selectFilter->SelectedIndex == 1) {
+                statusLabel->Text = getOptionName(mode);
+                auto start = high_resolution_clock::now();
                 filterGrayScale();
+                auto end = high_resolution_clock::now();
+                auto duration = duration_cast<microseconds>(end - start);
+                time = duration.count();
             }
 
             if (selectFilter->SelectedIndex == 2) {
-                filterSimpleDarkness();
+                statusLabel->Text = getOptionName(mode);
+                auto start = high_resolution_clock::now();
+                filterDarkness();
+                auto end = high_resolution_clock::now();
+                auto duration = duration_cast<microseconds>(end - start);
+                time = duration.count();
             }
 
             if (selectFilter->SelectedIndex == 3) {
+                statusLabel->Text = getOptionName(mode);
+                auto start = high_resolution_clock::now();
                 filterSaltAndPepper();
+                auto end = high_resolution_clock::now();
+                auto duration = duration_cast<microseconds>(end - start);
+                time = duration.count();
             }
+
+            labelExecutionTime->Text = "Duração: " + time.ToString() + " microssegundos";
         }
         else {
             MessageBox::Show("No image loaded in the input image box", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
@@ -381,7 +436,8 @@ namespace PixelWizardFX2023 {
     private: System::Void MainForm_Load(System::Object^ sender, System::EventArgs^ e) {
     }
 
-    /* Filters */
+    /******************************************** Filters *******************************************/
+
     private: System::Void filterBlue() {
         // Salve a imagem carregada em um arquivo temporário
         String^ tempFilePath = "temp_image.jpg";
@@ -397,6 +453,11 @@ namespace PixelWizardFX2023 {
                 img[i] = 0;     // Canal vermelho
                 img[i + 1] = 0;   // Canal verde
             }
+            
+            //TODO: implements multithread
+
+            filterBlueSimple(img, width, height, channels);
+
 
             // Salve a imagem modificada
             stbi_write_jpg("output_filter_blue.jpg", width, height, channels, img, 100);
@@ -426,12 +487,7 @@ namespace PixelWizardFX2023 {
 
         if (img != nullptr) {
             // grayscale
-            for (int i = 0; i < width * height * channels; i += channels) {
-                int gray = (img[i] + img[i + 1] + img[i + 2]) / 3;
-                img[i] = gray;     // Canal vermelho
-                img[i + 1] = gray;   // Canal verde
-                img[i + 2] = gray;
-            }
+            filterGrayScaleSimple(img, width, height, channels);
 
             // Salve a imagem modificada
             stbi_write_jpg("output_gray_scale.jpg", width, height, channels, img, 100);
@@ -450,7 +506,7 @@ namespace PixelWizardFX2023 {
         }
     }
 
-    private: System::Void filterSimpleDarkness() {
+    private: System::Void filterDarkness() {
         // Salve a imagem carregada em um arquivo temporário
         String^ tempFilePath = "temp_image.jpg";
         pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
@@ -461,19 +517,7 @@ namespace PixelWizardFX2023 {
 
         if (img != nullptr) {
             // simple darkness
-            for (int i = 0; i < width; i++) {
-                for (int y = 0; y < height; y++) {
-                    for (int c = 0; c < 3; c++) {
-                        if (img[(y * width + i) * 3 + c] >= 50) {
-                            img[(y * width + i) * 3 + c] -= 50;
-                        }
-                        else if (img[(y * width + i) * 3 + c] <= 50) {
-                            img[(y * width + i) * 3 + c] = 0;
-                        }
-                    }
-                
-                }
-            }
+            filterDarknessSimple(img, width, height, channels);
 
             // Salve a imagem modificada
             stbi_write_jpg("simple_darkness.jpg", width, height, channels, img, 100);
@@ -502,22 +546,7 @@ namespace PixelWizardFX2023 {
         unsigned char* img = stbi_load("temp_image.jpg", &width, &height, &channels, 0);
 
         if (img != nullptr) {
-            // salt and pepper noise
-            for (int i = 0; i < width; i++) {
-                for (int y = 0; y < height; y++) {
-                    for (int c = 0; c < 3; c++) {
-                        int num = rand() % 100;
-                        if (num < 4) {
-                            if (num % 2 == 0) {
-                                img[(y * width + i) * 3 + c] = 255;
-                            }
-                            else {
-                                img[(y * width + i) * 3 + c] = 0;
-                            }
-                        }
-                    }
-                }
-            }
+            filterSaltAndPepperSimple(img, width, height, channels);
 
             // Salve a imagem modificada
             stbi_write_jpg("salt_and_pepper.jpg", width, height, channels, img, 100);
@@ -565,6 +594,8 @@ namespace PixelWizardFX2023 {
     }
 
 private: System::Void label1_Click(System::Object^ sender, System::EventArgs^ e) {
+}
+private: System::Void label3_Click(System::Object^ sender, System::EventArgs^ e) {
 }
 };
 }
