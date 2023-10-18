@@ -4,6 +4,7 @@
 #include <thread>
 #include <vector>
 #include <chrono>
+#include <iomanip> // Para std::setprecision
 #include "filtersCpu.cpp"
 #include "filtersCpuMultithread.cpp"
 
@@ -68,6 +69,7 @@ namespace PixelWizardFX2023 {
     private: System::Windows::Forms::Label^ statusLabel;
     private: System::Windows::Forms::ContextMenuStrip^ contextMenuStrip1;
     private: System::Windows::Forms::Label^ labelExecutionTime;
+    private: System::Windows::Forms::GroupBox^ groupBox4;
 
 
 
@@ -107,11 +109,13 @@ namespace PixelWizardFX2023 {
             this->statusLabel = (gcnew System::Windows::Forms::Label());
             this->contextMenuStrip1 = (gcnew System::Windows::Forms::ContextMenuStrip(this->components));
             this->labelExecutionTime = (gcnew System::Windows::Forms::Label());
+            this->groupBox4 = (gcnew System::Windows::Forms::GroupBox());
             this->groupBox1->SuspendLayout();
             this->groupBox2->SuspendLayout();
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBoxInput))->BeginInit();
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBoxResult))->BeginInit();
             this->groupBox3->SuspendLayout();
+            this->groupBox4->SuspendLayout();
             this->SuspendLayout();
             // 
             // buttonOpen
@@ -299,11 +303,11 @@ namespace PixelWizardFX2023 {
             // statusLabel
             // 
             this->statusLabel->AutoSize = true;
-            this->statusLabel->Font = (gcnew System::Drawing::Font(L"Verdana", 9.75F, static_cast<System::Drawing::FontStyle>((System::Drawing::FontStyle::Bold | System::Drawing::FontStyle::Italic)),
+            this->statusLabel->Font = (gcnew System::Drawing::Font(L"Verdana", 9, static_cast<System::Drawing::FontStyle>((System::Drawing::FontStyle::Bold | System::Drawing::FontStyle::Italic)),
                 System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-            this->statusLabel->Location = System::Drawing::Point(456, 96);
+            this->statusLabel->Location = System::Drawing::Point(12, 21);
             this->statusLabel->Name = L"statusLabel";
-            this->statusLabel->Size = System::Drawing::Size(0, 16);
+            this->statusLabel->Size = System::Drawing::Size(0, 14);
             this->statusLabel->TabIndex = 11;
             // 
             // contextMenuStrip1
@@ -314,21 +318,34 @@ namespace PixelWizardFX2023 {
             // labelExecutionTime
             // 
             this->labelExecutionTime->AutoSize = true;
-            this->labelExecutionTime->Font = (gcnew System::Drawing::Font(L"Verdana", 9.75F, static_cast<System::Drawing::FontStyle>((System::Drawing::FontStyle::Bold | System::Drawing::FontStyle::Italic)),
+            this->labelExecutionTime->Font = (gcnew System::Drawing::Font(L"Verdana", 9, static_cast<System::Drawing::FontStyle>((System::Drawing::FontStyle::Bold | System::Drawing::FontStyle::Italic)),
                 System::Drawing::GraphicsUnit::Point, static_cast<System::Byte>(0)));
-            this->labelExecutionTime->Location = System::Drawing::Point(456, 125);
+            this->labelExecutionTime->Location = System::Drawing::Point(11, 46);
             this->labelExecutionTime->Name = L"labelExecutionTime";
-            this->labelExecutionTime->Size = System::Drawing::Size(0, 16);
+            this->labelExecutionTime->Size = System::Drawing::Size(0, 14);
             this->labelExecutionTime->TabIndex = 14;
             this->labelExecutionTime->Click += gcnew System::EventHandler(this, &MainForm::label3_Click);
+            // 
+            // groupBox4
+            // 
+            this->groupBox4->Controls->Add(this->labelExecutionTime);
+            this->groupBox4->Controls->Add(this->statusLabel);
+            this->groupBox4->Font = (gcnew System::Drawing::Font(L"Verdana", 12, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
+                static_cast<System::Byte>(0)));
+            this->groupBox4->Location = System::Drawing::Point(403, 87);
+            this->groupBox4->Name = L"groupBox4";
+            this->groupBox4->Size = System::Drawing::Size(238, 70);
+            this->groupBox4->TabIndex = 15;
+            this->groupBox4->TabStop = false;
+            this->groupBox4->Text = L"Performance";
+            this->groupBox4->Enter += gcnew System::EventHandler(this, &MainForm::groupBox4_Enter);
             // 
             // MainForm
             // 
             this->AutoScaleDimensions = System::Drawing::SizeF(6, 13);
             this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
             this->ClientSize = System::Drawing::Size(1044, 561);
-            this->Controls->Add(this->labelExecutionTime);
-            this->Controls->Add(this->statusLabel);
+            this->Controls->Add(this->groupBox4);
             this->Controls->Add(this->label2);
             this->Controls->Add(this->label1);
             this->Controls->Add(this->groupBox3);
@@ -346,6 +363,8 @@ namespace PixelWizardFX2023 {
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBoxInput))->EndInit();
             (cli::safe_cast<System::ComponentModel::ISupportInitialize^>(this->pictureBoxResult))->EndInit();
             this->groupBox3->ResumeLayout(false);
+            this->groupBox4->ResumeLayout(false);
+            this->groupBox4->PerformLayout();
             this->ResumeLayout(false);
             this->PerformLayout();
 
@@ -361,6 +380,15 @@ namespace PixelWizardFX2023 {
         }
     }
     private: System::Void button2_Click(System::Object^ sender, System::EventArgs^ e) {
+        if (pictureBoxInput->Image != nullptr) {
+            delete pictureBoxInput->Image;
+            pictureBoxInput->Image = nullptr;
+        }
+
+        if (pictureBoxResult->Image != nullptr) {
+            delete pictureBoxResult->Image;
+            pictureBoxResult->Image = nullptr;
+        }
     }
     private: System::Void radioButton1_CheckedChanged(System::Object^ sender, System::EventArgs^ e) {
     }
@@ -420,7 +448,9 @@ namespace PixelWizardFX2023 {
                 time = duration.count();
             }
 
-            labelExecutionTime->Text = "Duração: " + time.ToString() + " microssegundos";
+            double timeConverted = time / 1000000.0;
+
+            labelExecutionTime->Text = "Duração: " + System::String::Format("{0:F6}",timeConverted) + " segundos";
         }
         else {
             MessageBox::Show("No image loaded in the input image box", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
@@ -641,6 +671,8 @@ namespace PixelWizardFX2023 {
 private: System::Void label1_Click(System::Object^ sender, System::EventArgs^ e) {
 }
 private: System::Void label3_Click(System::Object^ sender, System::EventArgs^ e) {
+}
+private: System::Void groupBox4_Enter(System::Object^ sender, System::EventArgs^ e) {
 }
 };
 }

@@ -102,7 +102,7 @@ inline void filterMultithread(int filterNumber,
 
     // blue
     if (filterNumber == 1) {
-        for (unsigned i = 0; i < nbThreads; ++i) {
+        for (unsigned i = 0; i < nbThreads; i++) {
             int parteInicio = i * batchSize;
             myThreads[i] = std::thread(
                 filterBlueMultithread,
