@@ -404,7 +404,7 @@ namespace PixelWizardFX2023 {
                 // Darkness
                 statusLabel->Text = getOptionName(mode);
                 auto start = high_resolution_clock::now();
-                filterDarkness();
+                filterDarkness(mode);
                 auto end = high_resolution_clock::now();
                 auto duration = duration_cast<microseconds>(end - start);
                 time = duration.count();
@@ -414,7 +414,7 @@ namespace PixelWizardFX2023 {
                 // Salt and Pepper
                 statusLabel->Text = getOptionName(mode);
                 auto start = high_resolution_clock::now();
-                filterSaltAndPepper();
+                filterSaltAndPepper(mode);
                 auto end = high_resolution_clock::now();
                 auto duration = duration_cast<microseconds>(end - start);
                 time = duration.count();
@@ -462,7 +462,7 @@ namespace PixelWizardFX2023 {
             if (executionMode == 2) {
                 unsigned int numberOfElements = width * height * channels;
               
-                // int filterNumber, unsigned nbElements, int width, int height, int channels, unsigned char *img, bool use_threads = true
+                // filterNumber, nbElements, width, height, channels, *img, use_threads
                 filterMultithread(1, numberOfElements, width, height, channels, img, true);
             }
 
@@ -509,7 +509,7 @@ namespace PixelWizardFX2023 {
             if (executionMode == 2) {
                 unsigned int numberOfElements = width * height * channels;
 
-                // int filterNumber, unsigned nbElements, int width, int height, int channels, unsigned char *img, bool use_threads = true
+                // filterNumber, nbElements, width, height, channels, *img, use_threads
                 filterMultithread(2, numberOfElements, width, height, channels, img, true);
             }
 
@@ -530,7 +530,7 @@ namespace PixelWizardFX2023 {
         }
     }
 
-    private: System::Void filterDarkness() {
+    private: System::Void filterDarkness(int executionMode) {
         // Salve a imagem carregada em um arquivo temporário
         String^ tempFilePath = "temp_image.jpg";
         pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
@@ -545,8 +545,19 @@ namespace PixelWizardFX2023 {
         unsigned char* img = stbi_load("temp_image.jpg", &width, &height, &channels, 0);
 
         if (img != nullptr) {
-            // simple darkness
-            filterDarknessSimple(img, width, height, channels);
+            // CPU Normal
+            if (executionMode == 1) {
+                // simple darkness
+                filterDarknessSimple(img, width, height, channels);
+            }
+
+            // Parallel CPU
+            if (executionMode == 2) {
+                unsigned int numberOfElements = width * height * channels;
+
+                // filterNumber, nbElements, width, height, channels, *img, use_threads
+                filterMultithread(3, numberOfElements, width, height, channels, img, true);
+            }
 
             // Salve a imagem modificada
             stbi_write_jpg("simple_darkness.jpg", width, height, channels, img, 100);
@@ -565,7 +576,7 @@ namespace PixelWizardFX2023 {
         }
     }
 
-    private: System::Void filterSaltAndPepper() {
+    private: System::Void filterSaltAndPepper(int executionMode) {
         // Salve a imagem carregada em um arquivo temporário
         String^ tempFilePath = "temp_image.jpg";
         pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
