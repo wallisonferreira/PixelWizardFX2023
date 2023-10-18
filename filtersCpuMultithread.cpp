@@ -36,24 +36,30 @@ inline void filterGrayScaleMultithread(
 inline void filterDarknessMultithread(
     int parteInicio,
     int parteFinal,
-    int width,
-    int height,
     int channels,
     unsigned char* img) {
 
     // simple darkness
-    for (int i = parteInicio; i < parteFinal; i++) {
-        int x = i % width;
-        int y = i / width;
-
-        for (int c = 0; c < 3; c++) {
-            if (img[(y * width + x) * 3 + c] >= 50) {
-                img[(y * width + x) * 3 + c] -= 50;
-            }
-            else if (img[(y * width + x) * 3 + c] <= 50) {
-                img[(y * width + x) * 3 + c] = 0;
+    /*for (int i = parteInicio; i < parteFinal; i++) {
+        for (int j = 0; j < height; j++) {
+            for (int c = 0; c < 3; c++) {
+                if (img[(j * parteFinal + i) * 3 + c] >= 50) {
+                    img[(j * parteFinal + i) * 3 + c] -= 50;
+                }
+                else if (img[(j * parteFinal + i) * 3 + c] <= 50) {
+                    img[(j * parteFinal + i) * 3 + c] = 0;
+                }
             }
         }
+    }*/
+
+    // simple darkness 2
+    for (int i = parteInicio; i < parteFinal; i++) {
+            if (img[i] >= 50) {
+                img[i] -= 50;
+            } else {
+                img[i] = 0;
+            }
     }
 }
 
@@ -113,11 +119,39 @@ inline void filterMultithread(int filterNumber,
         }
     }
 
+    // grayscale
     if (filterNumber == 2) {
         for (unsigned i = 0; i < nbThreads; ++i) {
             int parteInicio = i * batchSize;
             myThreads[i] = std::thread(
                 filterGrayScaleMultithread,
+                parteInicio,
+                parteInicio + batchSize,
+                channels,
+                img
+            );
+        }
+    }
+
+    // darkness
+    if (filterNumber == 3) {
+
+        /*unsigned batchWidthSize = (width) / nbThreads;
+        unsigned batchWidthSizeRemainder = (width) % nbThreads;*/
+
+        for (unsigned i = 0; i < nbThreads; ++i) {
+            
+            //int parteInicio = i * batchWidthSize;
+
+            /*int parteFinal = (i == nbThreads - 1) 
+                ? parteInicio + batchWidthSize : parteInicio + batchWidthSizeRemainder;*/
+
+            //int parteFinal = parteInicio + batchWidthSize;
+
+            int parteInicio = i * batchSize;
+
+            myThreads[i] = std::thread(
+                filterDarknessMultithread,
                 parteInicio,
                 parteInicio + batchSize,
                 channels,
