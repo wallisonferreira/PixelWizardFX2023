@@ -3,18 +3,67 @@
 #include <thread>
 #include <future>
 #include <functional>
-//#include <iostream>
+#include <map>
 
 using namespace std;
 
-inline void operation(int parteInicio, int parteFinal, int channels, unsigned char *img) {
+inline void filterBlueMultithread(
+    int parteInicio,
+    int parteFinal,
+    int width,
+    int height,
+    int channels,
+    unsigned char* img) {
+
     for (int i = parteInicio; i < parteFinal; i += channels) {
         img[i] = 0;     // Canal vermelho
-        img[i+1] = 0;   // Canal verde
+        img[i + 1] = 0;   // Canal verde
     }
 }
 
-inline void parallel(unsigned nbElements, int width, int height, int channels,
+inline void filterGrayScaleMultithread(
+    int parteInicio, 
+    int parteFinal, 
+    int width, 
+    int height, 
+    int channels, 
+    unsigned char* img) {
+
+    for (int i = 0; i < width * height * channels; i += channels) {
+        int gray = (img[i] + img[i + 1] + img[i + 2]) / 3;
+        img[i] = gray;     // Canal vermelho
+        img[i + 1] = gray;   // Canal verde
+        img[i + 2] = gray;
+    }
+}
+
+inline void filterDarknessMultithread(
+    int parteInicio,
+    int parteFinal,
+    int width,
+    int height,
+    int channels,
+    unsigned char* img) {
+
+}
+
+inline void filterSaltAndPepperMultithread(
+    int parteInicio,
+    int parteFinal,
+    int width,
+    int height,
+    int channels,
+    unsigned char* img) {
+
+}
+
+using MapFilter = std::map<int, std::function<void(int, int, int, int, int, unsigned char*)>>;
+
+inline void filterMultithread(int filterNumber, 
+    unsigned nbElements, 
+    int width, 
+    int height, 
+    int channels, 
     unsigned char *img,
     bool use_threads = true) {
 
@@ -26,17 +75,30 @@ inline void parallel(unsigned nbElements, int width, int height, int channels,
 
     std::vector<std::thread> myThreads(nbThreads);
 
+    MapFilter mapFilter = {
+        { 1, filterBlueMultithread },
+        { 2, filterGrayScaleMultithread },
+        { 3, filterDarknessMultithread },
+        { 4, filterSaltAndPepperMultithread },
+    };
+
+    // filter blue
     if (use_threads)
     {
         for (unsigned i = 0; i < nbThreads; ++i) {
-            // int start = i * batchSize;
             int parteInicio = i * batchSize;
-            myThreads[i] = std::thread(operation, parteInicio, parteInicio + batchSize, channels, img);
+
+            myThreads[i] = std::thread(
+                mapFilter[filterNumber],
+                parteInicio,
+                parteInicio + batchSize,
+                width,
+                height,
+                channels,
+                img
+            );
         }
     }
-
-    // TODO: resolver o problema de número ímpar 
-    // (width*height*channels) / numberThreads não pode ser quebrado
 
     int inicio = nbThreads * batchSize;
 

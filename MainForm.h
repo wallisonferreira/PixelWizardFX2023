@@ -381,35 +381,27 @@ namespace PixelWizardFX2023 {
             int time = 0;
 
             if (selectFilter->SelectedIndex == 0) {
-                if (mode == 1) {
-                    statusLabel->Text = getOptionName(mode);
-                    auto start = high_resolution_clock::now();
-                    filterBlue();
-                    auto end = high_resolution_clock::now();
-                    auto duration = duration_cast<microseconds>(end - start);
-                    time = duration.count();
-                }
-                if (mode == 2) {
-                    unsigned int n = std::thread::hardware_concurrency();
-                    statusLabel->Text = getOptionName(mode) + ": " + n + "Threads concorrentes são suportadas.";
-                    auto start = high_resolution_clock::now();
-                    filterBlueParallel();
-                    auto end = high_resolution_clock::now();
-                    auto duration = duration_cast<microseconds>(end - start);
-                    time = duration.count();
-                }
+                // Blue
+                statusLabel->Text = getOptionName(mode);
+                auto start = high_resolution_clock::now();
+                filterBlue(mode);
+                auto end = high_resolution_clock::now();
+                auto duration = duration_cast<microseconds>(end - start);
+                time = duration.count();
             }
 
             if (selectFilter->SelectedIndex == 1) {
+                // Gray
                 statusLabel->Text = getOptionName(mode);
                 auto start = high_resolution_clock::now();
-                filterGrayScale();
+                filterGrayScale(mode);
                 auto end = high_resolution_clock::now();
                 auto duration = duration_cast<microseconds>(end - start);
                 time = duration.count();
             }
 
             if (selectFilter->SelectedIndex == 2) {
+                // Darkness
                 statusLabel->Text = getOptionName(mode);
                 auto start = high_resolution_clock::now();
                 filterDarkness();
@@ -419,6 +411,7 @@ namespace PixelWizardFX2023 {
             }
 
             if (selectFilter->SelectedIndex == 3) {
+                // Salt and Pepper
                 statusLabel->Text = getOptionName(mode);
                 auto start = high_resolution_clock::now();
                 filterSaltAndPepper();
@@ -444,7 +437,7 @@ namespace PixelWizardFX2023 {
 
     /******************************************** Filters *******************************************/
 
-    private: System::Void filterBlueParallel() {
+    private: System::Void filterBlue(int executionMode) {
         // Salve a imagem carregada em um arquivo temporário
         String^ tempFilePath = "temp_image.jpg";
         pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
@@ -460,53 +453,18 @@ namespace PixelWizardFX2023 {
 
         if (img != nullptr) {
 
-            unsigned int numberOfElements = width * height * channels;
-
-            // filter blue multithread
-            parallel(numberOfElements, width, height, channels, img);
-
-            // Salve a imagem modificada
-            stbi_write_jpg("output_filter_blue_multithread.jpg", width, height, channels, img, 100);
-
-            // Libere a memória da imagem original
-            stbi_image_free(img);
-
-            // Carregue a imagem modificada na quadro de saída
-            pictureBoxResult->Image = Image::FromFile("output_filter_blue_multithread.jpg");
-
-            // Delete the temporary file
-            System::IO::File::Delete(tempFilePath);
-        }
-        else {
-            MessageBox::Show("Failed to load image with stbi", "Error", MessageBoxButtons::OK, MessageBoxIcon::Error);
-        }
-    }
-
-    private: System::Void filterBlue() {
-        // Salve a imagem carregada em um arquivo temporário
-        String^ tempFilePath = "temp_image.jpg";
-        pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
-
-        // Verifica se existe alguma imagem no quadro de saída e deleta
-        if (pictureBoxResult->Image != nullptr) {
-            delete pictureBoxResult->Image;
-        }
-
-        // Carregue a imagem com stbi
-        int width, height, channels;
-        unsigned char* img = stbi_load("temp_image.jpg", &width, &height, &channels, 0);
-
-        if (img != nullptr) {
-            // Altere os canais vermelho e verde para zero
-            for (int i = 0; i < width * height * channels; i += channels) {
-                img[i] = 0;     // Canal vermelho
-                img[i + 1] = 0;   // Canal verde
+            // CPU Normal
+            if (executionMode == 1) {
+                filterBlueSimple(img, width, height, channels);
             }
-            
-            //TODO: implements multithread
 
-            filterBlueSimple(img, width, height, channels);
-
+            // Parallel CPU
+            if (executionMode == 2) {
+                unsigned int numberOfElements = width * height * channels;
+              
+                // int filterNumber, unsigned nbElements, int width, int height, int channels, unsigned char *img, bool use_threads = true
+                filterMultithread(1, numberOfElements, width, height, channels, img, true);
+            }
 
             // Salve a imagem modificada
             stbi_write_jpg("output_filter_blue.jpg", width, height, channels, img, 100);
@@ -525,7 +483,7 @@ namespace PixelWizardFX2023 {
         }
     }
 
-    private: System::Void filterGrayScale() {
+    private: System::Void filterGrayScale(int executionMode) {
         // Salve a imagem carregada em um arquivo temporário
         String^ tempFilePath = "temp_image.jpg";
         pictureBoxInput->Image->Save(tempFilePath, System::Drawing::Imaging::ImageFormat::Jpeg);
@@ -540,8 +498,20 @@ namespace PixelWizardFX2023 {
         unsigned char* img = stbi_load("temp_image.jpg", &width, &height, &channels, 0);
 
         if (img != nullptr) {
-            // grayscale
-            filterGrayScaleSimple(img, width, height, channels);
+
+            // CPU Normal
+            if (executionMode == 1) {
+                // grayscale
+                filterGrayScaleSimple(img, width, height, channels);
+            }
+
+            // Parallel CPU
+            if (executionMode == 2) {
+                unsigned int numberOfElements = width * height * channels;
+
+                // int filterNumber, unsigned nbElements, int width, int height, int channels, unsigned char *img, bool use_threads = true
+                filterMultithread(2, numberOfElements, width, height, channels, img, true);
+            }
 
             // Salve a imagem modificada
             stbi_write_jpg("output_gray_scale.jpg", width, height, channels, img, 100);
