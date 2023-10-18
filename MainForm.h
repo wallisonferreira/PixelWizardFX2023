@@ -463,7 +463,7 @@ namespace PixelWizardFX2023 {
                 unsigned int numberOfElements = width * height * channels;
               
                 // filterNumber, nbElements, width, height, channels, *img, use_threads
-                filterMultithread(1, numberOfElements, width, height, channels, img, true);
+                filterMultithread(1, width, height, channels, img);
             }
 
             // Salve a imagem modificada
@@ -510,7 +510,7 @@ namespace PixelWizardFX2023 {
                 unsigned int numberOfElements = width * height * channels;
 
                 // filterNumber, nbElements, width, height, channels, *img, use_threads
-                filterMultithread(2, numberOfElements, width, height, channels, img, true);
+                filterMultithread(2, width, height, channels, img);
             }
 
             // Salve a imagem modificada
@@ -556,7 +556,7 @@ namespace PixelWizardFX2023 {
                 unsigned int numberOfElements = width * height * channels;
 
                 // filterNumber, nbElements, width, height, channels, *img, use_threads
-                filterMultithread(3, numberOfElements, width, height, channels, img, true);
+                filterMultithread(3, width, height, channels, img);
             }
 
             // Salve a imagem modificada

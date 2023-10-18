@@ -10,8 +10,6 @@ using namespace std;
 inline void filterBlueMultithread(
     int parteInicio,
     int parteFinal,
-    int width,
-    int height,
     int channels,
     unsigned char* img) {
 
@@ -23,16 +21,14 @@ inline void filterBlueMultithread(
 
 inline void filterGrayScaleMultithread(
     int parteInicio, 
-    int parteFinal, 
-    int width, 
-    int height, 
-    int channels, 
+    int parteFinal,
+    int channels,
     unsigned char* img) {
 
-    for (int i = 0; i < width * height * channels; i += channels) {
+    for (int i = parteInicio; i < parteFinal; i += channels) {
         int gray = (img[i] + img[i + 1] + img[i + 2]) / 3;
-        img[i] = gray;     // Canal vermelho
-        img[i + 1] = gray;   // Canal verde
+        img[i] = gray;
+        img[i + 1] = gray;
         img[i + 2] = gray;
     }
 }
@@ -87,73 +83,48 @@ inline void filterSaltAndPepperMultithread(
     }
 }
 
-using MapFilter = std::map<int, std::function<void(int, int, int, int, int, unsigned char*)>>;
-
-inline void filterMultithread(int filterNumber, 
-    unsigned nbElements, 
+inline void filterMultithread(int filterNumber,
     int width, 
     int height, 
     int channels, 
-    unsigned char *img,
-    bool use_threads = true) {
+    unsigned char *img) {
 
     unsigned nbThreadsHint = thread::hardware_concurrency();
     unsigned nbThreads = nbThreadsHint == 0 ? 8 : (nbThreadsHint);
+
+    unsigned nbElements = width * height * channels;
 
     unsigned batchSize = (nbElements / nbThreads);
     unsigned batchRemainder = (nbElements % nbThreads);
 
     std::vector<std::thread> myThreads(nbThreads);
 
-    MapFilter mapFilter = {
-        { 1, filterBlueMultithread },
-        { 2, filterGrayScaleMultithread },
-        { 3, filterDarknessMultithread },
-        { 4, filterSaltAndPepperMultithread },
-    };
-
-    if (filterNumber == 3) {
-        // Filter 3
-
-        int batchSize = (width * height) / nbThreads;
-        int parteInicio = 0;
-
-        for (unsigned i = 0; i < nbThreads; ++i) {
-            int parteFinal = i == nbThreads - 1 ? width * height : parteInicio + batchSize;
-
-            myThreads[i] = std::thread(
-                mapFilter[filterNumber],
-                parteInicio,
-                parteInicio + batchSize,
-                width,
-                height,
-                channels,
-                img
-            );
-
-            parteInicio = parteFinal;
-        }
-    
-    
-    } else {
-        // Filter 1 or 2
+    // blue
+    if (filterNumber == 1) {
         for (unsigned i = 0; i < nbThreads; ++i) {
             int parteInicio = i * batchSize;
-
             myThreads[i] = std::thread(
-                mapFilter[filterNumber],
+                filterBlueMultithread,
                 parteInicio,
                 parteInicio + batchSize,
-                width,
-                height,
                 channels,
                 img
             );
         }
     }
 
-    int inicio = nbThreads * batchSize;
+    if (filterNumber == 2) {
+        for (unsigned i = 0; i < nbThreads; ++i) {
+            int parteInicio = i * batchSize;
+            myThreads[i] = std::thread(
+                filterGrayScaleMultithread,
+                parteInicio,
+                parteInicio + batchSize,
+                channels,
+                img
+            );
+        }
+    }
 
-    if (use_threads)
-        std::for_each(myThreads.begin(), myThreads.end(), std::mem_fn(&std::thread::join));
+    std::for_each(myThreads.begin(), myThreads.end(), std::mem_fn(&std::thread::join));
 }
