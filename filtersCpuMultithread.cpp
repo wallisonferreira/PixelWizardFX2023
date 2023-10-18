@@ -14,8 +14,8 @@ inline void filterBlueMultithread(
     unsigned char* img) {
 
     for (int i = parteInicio; i < parteFinal; i += channels) {
-        img[i] = 0;     // Canal vermelho
-        img[i + 1] = 0;   // Canal verde
+        img[i] = 0;     // red
+        img[i + 1] = 0;   // green
     }
 }
 
@@ -39,40 +39,22 @@ inline void filterDarknessMultithread(
     int channels,
     unsigned char* img) {
 
-    // simple darkness
-    /*for (int i = parteInicio; i < parteFinal; i++) {
-        for (int j = 0; j < height; j++) {
-            for (int c = 0; c < 3; c++) {
-                if (img[(j * parteFinal + i) * 3 + c] >= 50) {
-                    img[(j * parteFinal + i) * 3 + c] -= 50;
-                }
-                else if (img[(j * parteFinal + i) * 3 + c] <= 50) {
-                    img[(j * parteFinal + i) * 3 + c] = 0;
-                }
-            }
-        }
-    }*/
-
-    // simple darkness 2
     for (int i = parteInicio; i < parteFinal; i++) {
-            if (img[i] >= 50) {
-                img[i] -= 50;
-            } else {
-                img[i] = 0;
-            }
+        if (img[i] >= 50) {
+            img[i] -= 50;
+        } else {
+            img[i] = 0;
+        }
     }
 }
 
 inline void filterSaltAndPepperMultithread(
     int parteInicio,
     int parteFinal,
-    int width,
-    int height,
     int channels,
     unsigned char* img) {
 
-    // salt and pepper noise
-    for (int i = 0; i < width; i++) {
+    /*for (int i = 0; i < width; i++) {
         for (int y = 0; y < height; y++) {
             for (int c = 0; c < 3; c++) {
                 int num = rand() % 100;
@@ -84,6 +66,19 @@ inline void filterSaltAndPepperMultithread(
                         img[(y * width + i) * 3 + c] = 0;
                     }
                 }
+            }
+        }
+    }*/
+
+    for (int i = parteInicio; i < parteFinal; i++) {
+        int num = rand() % 100;
+
+        if (num < 4) {
+            if (num % 2 == 0) {
+                img[i] = 255;
+            }
+            else {
+                img[i] = 0;
             }
         }
     }
@@ -136,22 +131,29 @@ inline void filterMultithread(int filterNumber,
     // darkness
     if (filterNumber == 3) {
 
-        /*unsigned batchWidthSize = (width) / nbThreads;
-        unsigned batchWidthSizeRemainder = (width) % nbThreads;*/
-
         for (unsigned i = 0; i < nbThreads; ++i) {
-            
-            //int parteInicio = i * batchWidthSize;
 
             /*int parteFinal = (i == nbThreads - 1) 
                 ? parteInicio + batchWidthSize : parteInicio + batchWidthSizeRemainder;*/
-
-            //int parteFinal = parteInicio + batchWidthSize;
 
             int parteInicio = i * batchSize;
 
             myThreads[i] = std::thread(
                 filterDarknessMultithread,
+                parteInicio,
+                parteInicio + batchSize,
+                channels,
+                img
+            );
+        }
+    }
+
+    // salt and pepper
+    if (filterNumber == 4) {
+        for (unsigned i = 0; i < nbThreads; ++i) {
+            int parteInicio = i * batchSize;
+            myThreads[i] = std::thread(
+                filterSaltAndPepperMultithread,
                 parteInicio,
                 parteInicio + batchSize,
                 channels,
