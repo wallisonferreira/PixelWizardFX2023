@@ -54,22 +54,6 @@ inline void filterSaltAndPepperMultithread(
     int channels,
     unsigned char* img) {
 
-    /*for (int i = 0; i < width; i++) {
-        for (int y = 0; y < height; y++) {
-            for (int c = 0; c < 3; c++) {
-                int num = rand() % 100;
-                if (num < 4) {
-                    if (num % 2 == 0) {
-                        img[(y * width + i) * 3 + c] = 255;
-                    }
-                    else {
-                        img[(y * width + i) * 3 + c] = 0;
-                    }
-                }
-            }
-        }
-    }*/
-
     for (int i = parteInicio; i < parteFinal; i++) {
         int num = rand() % 100;
 
